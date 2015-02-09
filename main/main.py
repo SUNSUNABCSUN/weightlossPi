@@ -4,7 +4,7 @@ import numpy as np
 #structing element with 3*3 elements
 kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(5,5))
 code='0'
-img = cv2.imread("3.jpg",0)	#change grey
+img = cv2.imread("1.jpg",0)	#change grey
 res = cv2.resize(img,None,fx=.3,fy=.3,interpolation=cv2.INTER_CUBIC)
 # res = cv2.cvtColor(res,cv2.COLOR_BGR2GRAY)  #change grey, however 'img = cv2.imread("2.jpg",0)'has changed
 # cv2.namedWindow("orignial image")
@@ -71,6 +71,9 @@ cv2.imshow("Final_2",dst)
 
 m, n = dst.shape[:2]
 bar_y = np.zeros((500,255))
+bar_num = np.zeros((500,255))
+bar_int = np.zeros(500,dtype=int)   
+binary_bar = np.zeros(500,dtype=int)
 l=0
 for i in range(1,m):
     k = 1
@@ -93,7 +96,7 @@ m, n = bar_y.shape[:2]
 
 if m <= 1:
     code = '0'
-    print(1,'GameOver!\n')
+    print(1,'GameOver~\n')
     
 
 for i in range(1,m):           
@@ -109,25 +112,79 @@ k = 0
 for i in range(1,59):   
     k = k + bar_sum[i]
 
-k = k/95   git
+k = k/95   
 for i in range(1,59): 
     bar_int[i] = round(bar_sum[i]/k)
 
 k = 1
 for i in range(1,59):  
-    if rem in range(i,2):
+    if i%2 == 1:
         for j in range(1,bar_int[i]):  
-            bar_01[k] = 1
+            binary_bar[k] = 1
             k = k+1
         
     else:
         for j in range(1,bar_int[i]):  
-            bar_01[k] = 0
+            binary_bar[k] = 0
             k = k+1
-        
+print (binary_bar)       
     
+#########################
+#start to change the binary codes in to bar codes
+#
+check_left = np.int0([[13,25,19,61,35,49,47,59,55,11],[39,51,27,33,29,57, 5,17, 9,23]])
+check_right = np.int0([114,102,108,66,92,78,80,68,72,116])
+first_num = np.int0([31,20,18,17,12,6,3,10,9,5])
+bar_left = np.zeros(7,dtype=int)
+bar_right = np.zeros(7,dtype=int)
+if ((binary_bar[1] and ~binary_bar[2] and binary_bar[3]) and (~binary_bar[46] and binary_bar[47] and ~binary_bar[48] and binary_bar[49] and ~binary_bar[50]) and (binary_bar[95] and ~binary_bar[94] and binary_bar[93])):
+    l = 1
+    #change the left binary numbers into decimal numbers
+    for i in range(1,6):
+        bar_left[l] = 0
+        for k in range(1,7):
+            bar_left[l] = bar_left[l]+binary_bar[7*(i-1)+k+3]*(2^(7-k))
+        l = l+1
+    l = 1
+    #change the right binary numbers into decimal numbers
+    for i in range(1,6):
+        bar_right[l] = 0
+        for k in range(1,7):
+            bar_right[l] = bar_right[l]+binary_bar[7*(i+6)+k+1]*(2^(7-k))
+            k = k-1
+        l = l+1
+
+num_bar = ''
+num_first = 0
+first = 2
+#check the bar codes from the left bar dictionary
+for i in range(1,6):
+    for j in range(0,1):
+        for k in range(0,9):
+            if bar_left[i]==check_left[j+1,k+1]:
+                num_bar = strcat(num_bar , num2str(k));
+                
+                if first == 0:
+                    num_first = num_first + ~j*(2^(6-i))
+                elif first == 1:
+                    num_first = num_first + j*(2^(6-i))
+                elif first == 2:
+                    first = j
 
 
+#check the bar codes from the right bar dictionary
+for i in range(1,6):
+    for j in range(0,9):
+        if bar_right[i]==check_right[j+1]:
+            num_bar = strcat(num_bar , num2str(j))
+
+#check first bar code from the first bar code dictionary
+for i in range(0,9):
+    if num_first==first_num[i+1]:
+        num_bar = strcat(num2str(i) , num_bar)
+        break
+
+print ('the bar code is: ',num_bar)
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
